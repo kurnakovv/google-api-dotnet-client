@@ -22,6 +22,13 @@ RUN choco install -y --no-progress dotnet-6.0-sdk
 # Install Git
 RUN choco install -y --no-progress git
 
+# Install cygwin and packages exactly as Kokoro does on its own containers
+RUN Invoke-WebRequest 'https://cygwin.com/setup-x86_64.exe' -OutFile C:/TEMP/cygwin_setup.exe -UseBasicParsing; \
+    Start-Process 'C:/TEMP/cygwin_setup.exe' -ArgumentList '-X', '--quiet-mode', '--root', 'C:\Cygwin64', '--site', 'http://ctm.crouchingtigerhiddenfruitbat.org/pub/cygwin/circa/64bit/2022/11/23/063529' -Wait -NoNewWindow; \
+    Remove-Item C:/TEMP/cygwin_setup.exe; \
+    $old_path = [Environment]::GetEnvironmentVariable(\"PATH\", \"Machine\"); \
+    [Environment]::SetEnvironmentVariable(\"PATH\", $old_path + \";C:\Cygwin64\bin\", \"Machine\");
+
 # Default to PowerShell.
 # This is what Kokoro owned Docker images do. We'll do the same at least for now.
 CMD ["powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]
